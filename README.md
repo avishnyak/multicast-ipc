@@ -1,5 +1,7 @@
 # Multicast IPC
 
+[![npm](https://img.shields.io/npm/v/multicast-ipc.svg)](https://www.npmjs.com/package/multicast-ipc)
+
 Dealing with sockets, events and state machines is hard.  Communicating between your processes should be fun not hard.
 This module aims to make that happen by abstracting away some of the complexity and using promises to chain together
 communication states.
