@@ -3,7 +3,7 @@ var dgram = require('dgram');
 var CommApi = require('./comm-api');
 
 /**
- * @module multicast-ipc
+ * @class multicastIpc
  */
 
 /**
@@ -73,6 +73,12 @@ function getSocket(port, multicastAddress) {
  *             .then(api.unbind);  // This is optional (the library automatically handles resources
  * });
  * ```
+ *
+ * @memberof! multicastIpc
+ * @static
+ * @alias multicastIpc.withSocket
+ *
+ * @since 1.0.0
  */
 exports.withSocket = function bind(port, multicastAddress, callback) {
     var p = typeof port === 'number' ? port : 61088;
@@ -89,5 +95,8 @@ exports.withSocket = function bind(port, multicastAddress, callback) {
  * @callback apiCallback
  *
  * @param {CommApi} api - API Helper Object
+ *
+ * @memberof! multicastIpc
+ * @since 1.0.0
  */
 

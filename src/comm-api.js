@@ -1,10 +1,6 @@
 var promise = require('bluebird');
 
 /**
- * @module comm-api
- */
-
-/**
  * API Helper Object has convenience functions for implementing your custom communications protocol.
  * @class CommApi
  * @param socket
@@ -25,6 +21,8 @@ module.exports = function CommApi(socket) {
  * @reject {Error} err - Error returned from socket
  *
  * @returns {promise}
+ *
+ * @since 1.0.0
  */
 CommApi.prototype.broadcast = function (message) {
     var socket = this._socket;
@@ -49,6 +47,8 @@ CommApi.prototype.broadcast = function (message) {
  * @reject {Error} err - Error from sending the command
  *
  * @returns {Promise}
+ *
+ * @since 1.0.0
  */
 CommApi.prototype.send = function send(message, port, ipAddress) {
     var socket = this._socket;
@@ -66,6 +66,8 @@ CommApi.prototype.send = function send(message, port, ipAddress) {
  * @reject {Error} err - Socket could not be closed
  *
  * @returns {Promise}
+ *
+ * @since 1.0.0
  */
 CommApi.prototype.unbind = function unbind() {
     var socket = this._socket;
@@ -85,6 +87,8 @@ CommApi.prototype.unbind = function unbind() {
  * @reject {Error} err - Error thrown from the filter function
  *
  * @returns {Promise}
+ *
+ * @since 1.0.0
  */
 CommApi.prototype.waitForMessage = function waitForMessage(filter) {
     var socket = this._socket;
@@ -123,7 +127,8 @@ var repeatWhile = promise.method(function(condition, action, lastValue) {
  * the action function as input and should return ```true``` to continue the loop or false to ```stop```.
  *
  * The ```action``` function contains the body of the loop.  This is typically an entire back and forth interaction of the
- * protocol using {@link broadcast}, {@link send} and {@link waitForMessage} functions.  The end result should be a
+ * protocol using {@link #CommApi+broadcast broadcast}, {@link #CommApi+send send} and
+ * {@link #CommApi+waitForMessage waitForMessage} functions.  The end result should be a
  * promise that resolves to a value which will be passed into the ```condition``` function.
  *
  * @param {function} condition - A callback function that receives the "lastValue" and returns true to continue repeating
@@ -134,6 +139,8 @@ var repeatWhile = promise.method(function(condition, action, lastValue) {
  * @reject {Error} err - Error thrown by either the condition function or the action function
  *
  * @returns {Promise}
+ *
+ * @since 1.0.0
  */
 CommApi.prototype.repeatWhile = repeatWhile;
 
@@ -147,6 +154,8 @@ CommApi.prototype.repeatWhile = repeatWhile;
  * @reject {Error} err - Error thrown from the ```fn``` function
  *
  * @returns {Promise}
+ *
+ * @since 1.0.0
  */
 CommApi.prototype.repeatFor = function repeatFor(count, fn) {
     return repeatWhile(function (lastValue) { return lastValue > 0; }, function (lastValue) {

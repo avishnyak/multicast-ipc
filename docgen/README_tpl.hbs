@@ -1,5 +1,7 @@
 # Multicast IPC
 
+[![npm](https://img.shields.io/npm/v/multicast-ipc.svg)](https://www.npmjs.com/package/multicast-ipc)
+
 Dealing with sockets, events and state machines is hard.  Communicating between your processes should be fun not hard.
 This module aims to make that happen by abstracting away some of the complexity and using promises to chain together
 communication states.
@@ -11,7 +13,7 @@ var ipc = require('multicast-ipc');
 ipc.withSocket(function (api) {
   // API is a handy class that has lots of helper functions on it
 
-  api.broadcast('I am online!')
+  return api.broadcast('I am online!')
      .then(api.waitForMessage())
      .timeout(5000) // from Bluebird
      .then(function (message) {
@@ -39,8 +41,6 @@ compatibility.
 * Compatible with Windows, Linux and OS X
 * Requires a network to be present - don't rely on this IPC method for local-only programs
 
-{{#module name="multicast-ipc"}}{{>body}}{{/module}}
-
 ## Installation
 
 Install using [npm](https://www.npmjs.org/):
@@ -49,10 +49,15 @@ Install using [npm](https://www.npmjs.org/):
 npm install multicast-ipc
 ```
 
-## API Reference
-{{#module name="multicast-ipc"}}{{>docs}}{{/module}}
+## API Documentation
 
-{{#class name="CommApi"}}{{>docs}}{{/class}}
+{{#orphans~}}
+    {{>member-index}}
+{{/orphans}}
+
+-----
+
+{{>main}}
 
 ## Contributing
 
