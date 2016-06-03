@@ -1,10 +1,10 @@
 {
   "name": "multicast-ipc",
-  "version": "1.0.0",
-  "description": "A promise-based IPC implementation that uses dgram multicast under the hood.",
+  "version": "1.0.1",
+  "description": "The simplest way to do interprocess communication on one or more machines using promises",
   "main": "index.js",
   "scripts": {
-    "docs": "jsdoc2md \"src/**/*.js\" --separators --sort-by name --template ./tutorials/README_tpl.hbs > README.md",
+    "docs": "jsdoc2md \"src/**/*.js\" --sort-by name --template ./tutorials/README_tpl.hbs > README.md",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Anton Vishnyak",

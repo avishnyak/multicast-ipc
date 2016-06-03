@@ -1,5 +1,37 @@
 # Multicast IPC
 
+Dealing with sockets, events and state machines is hard.  Communicating between your processes should be fun not hard.
+This module aims to make that happen by abstracting away some of the complexity and using promises to chain together
+communication states.
+
+## Example
+```js
+var ipc = require('multicast-ipc');
+
+ipc.withSocket(function (api) {
+  // API is a handy class that has lots of helper functions on it
+
+  api.broadcast('I am online!')
+     .then(api.waitForMessage())
+     .timeout(5000) // from Bluebird
+     .then(function (message) {
+         // message is a Buffer here
+         var cmd = message.toString();
+
+         if (cmd === 'ping') {
+            return api.broadcast('pong');
+         } else {
+            return api.unbind();
+         }
+     });
+});
+```
+
+__Note:__ This is still under active development and APIs may change.  Every effort will be made to maintain backwards
+compatibility.
+
+### Benefits
+
 * A chainable promise-based api
 * Abstracts all the socket work and resources via promises
 * Allows a pub/sub inter-process communication
@@ -28,9 +60,6 @@ npm install multicast-ipc
     * _static_
         * [.withSocket([port], [multicastAddress], callback)](#module_multicast-ipc.withSocket) ⇒ <code>Promise</code>
 
-
--
-
 <a name="module_multicast-ipc..apiCallback"></a>
 
 ### multicast-ipc~apiCallback : <code>function</code>
@@ -41,9 +70,6 @@ This API callback is where you would implement your custom communication protoco
 | Param | Type | Description |
 | --- | --- | --- |
 | api | <code>CommApi</code> | API Helper Object |
-
-
--
 
 <a name="module_multicast-ipc.withSocket"></a>
 
@@ -63,9 +89,6 @@ Initialize a socket.  Listens to messages, allows sending messages and automatic
 **Example**  
 ```jsvar ipc = require('multicast-ipc');ipc.withSocket(function (api) {  // The API object contains helper methods for implementing your own IPC protocol    return api.broadcast('node:online')            .then(api.unbind);  // This is optional (the library automatically handles resources});```
 
--
-
-
 
 <a name="module_comm-api..CommApi"></a>
 
@@ -81,9 +104,6 @@ Initialize a socket.  Listens to messages, allows sending messages and automatic
     * [.unbind()](#module_comm-api..CommApi+unbind) ⇒ <code>Promise</code>
     * [.waitForMessage([filter])](#module_comm-api..CommApi+waitForMessage) ⇒ <code>Promise</code>
 
-
--
-
 <a name="new_module_comm-api..CommApi_new"></a>
 
 ### new CommApi(socket)
@@ -93,9 +113,6 @@ API Helper Object has convenience functions for implementing your custom communi
 | Param |
 | --- |
 | socket | 
-
-
--
 
 <a name="module_comm-api..CommApi+broadcast"></a>
 
@@ -110,9 +127,6 @@ Broadcast a message to all listeners.Listeners will need to connect to the sam
 | --- | --- | --- |
 | message | <code>Buffer</code> &#124; <code>string</code> | Message to send |
 
-
--
-
 <a name="module_comm-api..CommApi+repeatFor"></a>
 
 ### commApi.repeatFor(count, fn) ⇒ <code>Promise</code>
@@ -126,9 +140,6 @@ Repeat a set of commands for a specific number of times
 | --- | --- | --- |
 | count | <code>number</code> | The number of times that ```fn``` should be called |
 | fn | <code>function</code> | The function that should be repeated |
-
-
--
 
 <a name="module_comm-api..CommApi+repeatWhile"></a>
 
@@ -145,9 +156,6 @@ Repeat a certain chain of commands until the specified condition is met.  This i
 | action | <code>function</code> | A callback function that must return a promise |
 | lastValue | <code>\*</code> | This is the first "lastValue" that will be passed to the condition function |
 
-
--
-
 <a name="module_comm-api..CommApi+send"></a>
 
 ### commApi.send(message, port, ipAddress) ⇒ <code>Promise</code>
@@ -163,9 +171,6 @@ Send a message directly to a port/ip address.This function can be used for 1:1
 | port | <code>number</code> | UDP port to send data to |
 | ipAddress | <code>string</code> | Destination hostname or IP address |
 
-
--
-
 <a name="module_comm-api..CommApi+unbind"></a>
 
 ### commApi.unbind() ⇒ <code>Promise</code>
@@ -174,9 +179,6 @@ Unbind socket.  No more communication can be done through this promise chain aft
 **Kind**: instance method of <code>[CommApi](#module_comm-api..CommApi)</code>  
 **Fulfil**: Socket closed successfully  
 **Reject**: <code>Error</code> err - Socket could not be closed  
-
--
-
 <a name="module_comm-api..CommApi+waitForMessage"></a>
 
 ### commApi.waitForMessage([filter]) ⇒ <code>Promise</code>
@@ -189,9 +191,6 @@ Wait for a specific message.  The optional filter function is called for every m
 | Param | Type | Description |
 | --- | --- | --- |
 | [filter] | <code>function</code> | Each received message is passed into the filter function. |
-
-
--
 
 
 

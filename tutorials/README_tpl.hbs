@@ -1,5 +1,37 @@
 # Multicast IPC
 
+Dealing with sockets, events and state machines is hard.  Communicating between your processes should be fun not hard.
+This module aims to make that happen by abstracting away some of the complexity and using promises to chain together
+communication states.
+
+## Example
+```js
+var ipc = require('multicast-ipc');
+
+ipc.withSocket(function (api) {
+  // API is a handy class that has lots of helper functions on it
+
+  api.broadcast('I am online!')
+     .then(api.waitForMessage())
+     .timeout(5000) // from Bluebird
+     .then(function (message) {
+         // message is a Buffer here
+         var cmd = message.toString();
+
+         if (cmd === 'ping') {
+            return api.broadcast('pong');
+         } else {
+            return api.unbind();
+         }
+     });
+});
+```
+
+__Note:__ This is still under active development and APIs may change.  Every effort will be made to maintain backwards
+compatibility.
+
+### Benefits
+
 * A chainable promise-based api
 * Abstracts all the socket work and resources via promises
 * Allows a pub/sub inter-process communication
