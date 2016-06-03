@@ -1,5 +1,6 @@
 var promise = require('bluebird');
 var dgram = require('dgram');
+var CommApi = require('./comm-api');
 
 /**
  * @module multicast-ipc
@@ -12,7 +13,7 @@ var dgram = require('dgram');
  * @param {number} port - Port to listen/send
  * @param {string} [multicastAddress] - A multicast address for the socket (Default: 224.0.2.1)
  *
- * @fulfill {socket}
+ * @fulfil {socket}
  * @reject {Error}
  *
  * @returns {Promise}
@@ -54,9 +55,9 @@ function getSocket(port, multicastAddress) {
  *
  * @param {number} [port] - Datagram port to listen on (Default: 61088)
  * @param {string} [multicastAddress] - Multicast address to group senders/listeners
- * @param {function} callback - Function that will be called with the communication api object
+ * @param {apiCallback} callback - Function that will be called with the communication api object
  *
- * @fulfill {*} Result of the last item returned from the callback
+ * @fulfil {*} Result of the last item returned from the callback
  * @reject {Error} Error from binding the socket
  *
  * @returns {Promise}
@@ -78,74 +79,15 @@ exports.withSocket = function bind(port, multicastAddress, callback) {
     var cb = typeof port === 'function' ? port : callback;
 
     return promise.using(getSocket(p, multicastAddress), function (socket) {
-        var api = {
-            broadcast: broadcast.bind(socket),
-            send: send.bind(socket),
-            waitForMessage: waitForMessage.bind(socket),
-            repeatWhile: repeatWhile,
-            repeatFor: repeatFor,
-            unbind: unbind.bind(socket)
-        };
-
-        return promise.try(cb, api);
+        return promise.try(cb, new CommApi(socket));
     });
 };
 
-function broadcast(message) {
-    var socket = this;
+/**
+ * This API callback is where you would implement your custom communication protocol.
+ *
+ * @callback apiCallback
+ *
+ * @param {CommApi} api - API Helper Object
+ */
 
-    return send.bind(this, message, socket._port, socket._multicastAddress)();
-}
-
-function send(message, port, ipAddress) {
-    var socket = this;
-    var messageBuffer = new Buffer(message);
-
-    return promise.fromCallback(function (callback) {
-        socket.send(messageBuffer, 0, messageBuffer.length, port, ipAddress, callback);
-    });
-}
-
-function unbind() {
-    var socket = this;
-
-    return promise.fromCallback(function (callback) {
-        socket.close(callback);
-    });
-}
-
-function waitForMessage(filter) {
-    var socket = this;
-
-    return repeatWhile(function (message) {
-        return typeof message === 'undefined';
-    }, function () {
-        var fn;
-
-        return new promise(function (resolve) {
-            fn = processMessage;
-
-            socket.once('message', fn);
-
-            function processMessage(message, rinfo) {
-                if (typeof filter !== 'function' || filter(message, rinfo)) {
-                    resolve(message);
-                } else {
-                    resolve(undefined);
-                }
-            }
-        }).error(function () { socket.removeListener('message', fn); });
-    }, undefined);
-}
-
-var repeatWhile = promise.method(function(condition, action, lastValue) {
-    if (!condition(lastValue)) return lastValue;
-
-    return action(lastValue).then(repeatWhile.bind(null, condition, action));
-});
-
-function repeatFor(count, fn) {
-    return repeatWhile(function (lastValue) { return lastValue > 0; }, function (lastValue) {
-        return promise.try(fn).then(function () { return promise.resolve(--lastValue); });
-    }, count);
-}

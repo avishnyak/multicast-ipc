@@ -4,16 +4,15 @@
   "description": "A promise-based IPC implementation that uses dgram multicast under the hood.",
   "main": "index.js",
   "scripts": {
-    "docs": "jsdoc2md \"src/**/*.js\" --template ./tutorials/README_tpl.hbs > README.md",
+    "docs": "jsdoc2md \"src/**/*.js\" --separators --sort-by name --template ./tutorials/README_tpl.hbs > README.md",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Anton Vishnyak",
   "license": "ISC",
   "dependencies": {
     "bluebird": "^3.4.0"
   },
   "devDependencies": {
-    "jsdoc": "^3.4.0",
     "jsdoc-to-markdown": "^1.3.6"
   }
 }
