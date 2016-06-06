@@ -23,11 +23,30 @@ module.exports = function CommApi(socket) {
  * @returns {promise}
  *
  * @since 1.0.0
+ *
+ * @example
+ * ```js
+ * var ipc = require('multicast-ipc');
+ *
+ * // Announcer BOT will tell everyone when someone joins the room!
+ * ipc.withSocket(function (api) {
+ *   function isJoinMessage(message, rinfo) {
+ *       return message.toString().substr(0, 5) == 'join:';
+ *   }
+ *
+ *   return api.waitForMessage(isJoinMessage)
+ *             .map(function (req) {
+ *                 // Send a message to all listeners
+ *                 
+ *                 return api.broadcast('Player ' + req.message.toString().substr(5) + ' has entered the arena!');
+ *             };
+ * });
+ * ```
  */
 CommApi.prototype.broadcast = function (message) {
     var socket = this._socket;
 
-    return send.bind(this, message, socket._port, socket._multicastAddress)();
+    return send.bind(this, message, socket.address().port, socket.address().address)();
 };
 
 /**
@@ -49,6 +68,26 @@ CommApi.prototype.broadcast = function (message) {
  * @returns {Promise}
  *
  * @since 1.0.0
+ *
+ * ```js
+ * var ipc = require('multicast-ipc');
+ *
+ * // Welcome BOT will welcome new players
+ * ipc.withSocket(function (api) {
+ *   // Send a message to all listeners
+ *
+ *   function isJoinMessage(message, rinfo) {
+ *       return message.toString().substr(0, 5) == 'join:';
+ *   }
+ *
+ *   return api.waitForMessage(isJoinMessage)
+ *             .map(function (req) {
+ *                 // Send a direct message as a 'reply' back to the process that sent the original message
+ *
+ *                 return api.send('Welcome ' + req.message.toString().substr(5) + '!', req.port, req.address);
+ *             };
+ * });
+ * ```
  */
 CommApi.prototype.send = function send(message, port, ipAddress) {
     var socket = this._socket;
@@ -83,12 +122,28 @@ CommApi.prototype.unbind = function unbind() {
  *
  * @param {function} [filter] - Each received message is passed into the filter function.
  *
- * @fulfil {*} message - The message that was received
+ * @fulfil {{ address: string, family: string, port: number, message: Buffer }} message - The message that was received
  * @reject {Error} err - Error thrown from the filter function
  *
  * @returns {Promise}
  *
  * @since 1.0.0
+ *
+ * ```js
+ * var ipc = require('multicast-ipc');
+ *
+ * // Logger BOT will log incoming messages
+ * ipc.withSocket(function (api) {
+ *   function isJoinMessage(message, rinfo) {
+ *       return message.toString().substr(0, 5) == 'join:';
+ *   }
+ *
+ *   return api.waitForMessage(isJoinMessage)
+ *             .map(function (req) {
+ *                 console.log('Audit Log: %s:%d - %s', req.address, req.port, req.message.toString());
+ *             };
+ * });
+ * ```
  */
 CommApi.prototype.waitForMessage = function waitForMessage(filter) {
     var socket = this._socket;
@@ -105,7 +160,9 @@ CommApi.prototype.waitForMessage = function waitForMessage(filter) {
 
             function processMessage(message, rinfo) {
                 if (typeof filter !== 'function' || filter(message, rinfo) === true) {
-                    resolve(message);
+                    rinfo.message = message;
+
+                    resolve(rinfo);
                 } else {
                     resolve(undefined);
                 }

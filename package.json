@@ -19,7 +19,7 @@
     "protocol"
   ],
   "scripts": {
-    "docs": "jsdoc2md \"src/**/*.js\" --partial \"./docgen/tpl/**/*.hbs\" --sort-by name --template ./docgen/README_tpl.hbs > README.md",
+    "docs": "jsdoc2md \"src/**/*.js\" --partial \"./docgen/tpl/**/*.hbs\" --separators --sort-by name --template ./docgen/README_tpl.hbs > README.md",
     "prepublish": "npm run docs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

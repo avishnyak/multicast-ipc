@@ -81,6 +81,9 @@ npm install multicast-ipc
 <a name="CommApi"></a>
 
 ## CommApi
+
+-----
+
 <a name="new_CommApi_new"></a>
 
 ### new CommApi(socket)
@@ -90,6 +93,9 @@ API Helper Object has convenience functions for implementing your custom communi
 | Param |
 | --- |
 | socket | 
+
+
+-----
 
 <a name="CommApi+broadcast"></a>
 
@@ -106,6 +112,27 @@ Listeners will need to connect to the same port and multicastAddress as the send
 | --- | --- | --- |
 | message | <code>Buffer</code> &#124; <code>string</code> | Message to send |
 
+**Example**  
+```js
+var ipc = require('multicast-ipc');
+
+// Announcer BOT will tell everyone when someone joins the room!
+ipc.withSocket(function (api) {
+  function isJoinMessage(message, rinfo) {
+      return message.toString().substr(0, 5) == 'join:';
+  }
+
+  return api.waitForMessage(isJoinMessage)
+            .map(function (req) {
+                // Send a message to all listeners
+                
+                return api.broadcast('Player ' + req.message.toString().substr(5) + ' has entered the arena!');
+            };
+});
+```
+
+-----
+
 <a name="CommApi+repeatFor"></a>
 
 ### *commApi*.repeatFor(count, fn) ⇒ <code>Promise</code>
@@ -119,6 +146,9 @@ Repeat a set of commands for a specific number of times
 | --- | --- | --- |
 | count | <code>number</code> | The number of times that ```fn``` should be called |
 | fn | <code>function</code> | The function that should be repeated |
+
+
+-----
 
 <a name="CommApi+repeatWhile"></a>
 
@@ -143,6 +173,9 @@ promise that resolves to a value which will be passed into the ```condition``` f
 | action | <code>function</code> | A callback function that must return a promise |
 | lastValue | <code>\*</code> | This is the first "lastValue" that will be passed to the condition function |
 
+
+-----
+
 <a name="CommApi+send"></a>
 
 ### *commApi*.send(message, port, ipAddress) ⇒ <code>Promise</code>
@@ -156,13 +189,36 @@ one processTick delay. If the address is an empty string, '127.0.0.1' or '::1' w
 
 **Fulfil**: No value  
 **Reject**: <code>Error</code> err - Error from sending the command  
-**Since**: 1.0.0  
+**Since**: 1.0.0
+
+```js
+var ipc = require('multicast-ipc');
+
+// Welcome BOT will welcome new players
+ipc.withSocket(function (api) {
+  // Send a message to all listeners
+
+  function isJoinMessage(message, rinfo) {
+      return message.toString().substr(0, 5) == 'join:';
+  }
+
+  return api.waitForMessage(isJoinMessage)
+            .map(function (req) {
+                // Send a direct message as a 'reply' back to the process that sent the original message
+
+                return api.send('Welcome ' + req.message.toString().substr(5) + '!', req.port, req.address);
+            };
+});
+```  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | message | <code>Buffer</code> &#124; <code>string</code> | The message to send |
 | port | <code>number</code> | UDP port to send data to |
 | ipAddress | <code>string</code> | Destination hostname or IP address |
+
+
+-----
 
 <a name="CommApi+unbind"></a>
 
@@ -172,23 +228,48 @@ Unbind socket.  No more communication can be done through this promise chain aft
 **Fulfil**: Socket closed successfully  
 **Reject**: <code>Error</code> err - Socket could not be closed  
 **Since**: 1.0.0  
+
+-----
+
 <a name="CommApi+waitForMessage"></a>
 
 ### *commApi*.waitForMessage([filter]) ⇒ <code>Promise</code>
 Wait for a specific message.  The optional filter function is called for every message that is received.  If the filter
 function returns true, the promise is resolved with that value.
 
-**Fulfil**: <code>\*</code> message - The message that was received  
+**Fulfil**: <code>{ address: string, family: string, port: number, message: Buffer </code>} message - The message that was received  
 **Reject**: <code>Error</code> err - Error thrown from the filter function  
-**Since**: 1.0.0  
+**Since**: 1.0.0
+
+```js
+var ipc = require('multicast-ipc');
+
+// Logger BOT will log incoming messages
+ipc.withSocket(function (api) {
+  function isJoinMessage(message, rinfo) {
+      return message.toString().substr(0, 5) == 'join:';
+  }
+
+  return api.waitForMessage(isJoinMessage)
+            .map(function (req) {
+                console.log('Audit Log: %s:%d - %s', req.address, req.port, req.message.toString());
+            };
+});
+```  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | [filter] | <code>function</code> | Each received message is passed into the filter function. |
 
+
+-----
+
 <a name="multicastIpc"></a>
 
 ## multicastIpc
+
+-----
+
 <a name="multicastIpc.apiCallback"></a>
 
 ### *multicastIpc*..apiCallback : <code>function</code>
@@ -200,23 +281,26 @@ This API callback is where you would implement your custom communication protoco
 | --- | --- | --- |
 | api | <code>[CommApi](#CommApi)</code> | API Helper Object |
 
+
+-----
+
 <a name="multicastIpc.withSocket"></a>
 
 ### *multicastIpc*..withSocket([port], [multicastAddress], callback) ⇒ <code>Promise</code>
 Initialize a socket.  Listens to messages, allows sending messages and automatically cleans up after itself.
 
-The callback function will be invoked after the socket is successfully set up.  An `api` object will be passed
+The callback function will be invoked after the socket is successfully set up.  An [api](#CommApi) object will be passed
 to the callback which has utility functions that help in creating the application-layer communication protocol.
 
 **Fulfil**: <code>\*</code> Result of the last item returned from the callback  
 **Reject**: <code>Error</code> Error from binding the socket  
 **Since**: 1.0.0  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| [port] | <code>number</code> | Datagram port to listen on (Default: 61088) |
-| [multicastAddress] | <code>string</code> | Multicast address to group senders/listeners |
-| callback | <code>apiCallback</code> | Function that will be called with the communication api object |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [port] | <code>number</code> | <code>61088</code> | Datagram port to listen on |
+| [multicastAddress] | <code>string</code> | <code>&quot;224.0.2.1&quot;</code> | Multicast address to group senders/listeners |
+| callback | <code>apiCallback</code> |  | Function that will be called with the communication api object |
 
 **Example**  
 ```js
@@ -229,6 +313,9 @@ ipc.withSocket(function (api) {
             .then(api.unbind);  // This is optional (the library automatically handles resources
 });
 ```
+
+-----
+
 
 ## Contributing
 
