@@ -11,7 +11,7 @@ var ipc = require('multicast-ipc');
 ipc.withSocket(function (api) {
   // API is a handy class that has lots of helper functions on it
 
-  api.broadcast('I am online!')
+  var protocol = api.broadcast('ping')
      .then(api.waitForMessage())
      .timeout(5000) // from Bluebird
      .then(function (message) {
@@ -24,6 +24,8 @@ ipc.withSocket(function (api) {
             return api.unbind();
          }
      });
+     
+  return protocol;
 });
 ```
 
@@ -74,7 +76,10 @@ This API callback is where you would implement your custom communication protoco
 <a name="module_multicast-ipc.withSocket"></a>
 
 ### multicast-ipc.withSocket([port], [multicastAddress], callback) ⇒ <code>Promise</code>
-Initialize a socket.  Listens to messages, allows sending messages and automatically cleans up after itself.The callback function will be invoked after the socket is successfully set up.  An `api` object will be passedto the callback which has utility functions that help in creating the application-layer communication protocol.
+Initialize a socket.  Listens to messages, allows sending messages and automatically cleans up after itself.
+
+The callback function will be invoked after the socket is successfully set up.  An `api` object will be passed
+to the callback which has utility functions that help in creating the application-layer communication protocol.
 
 **Kind**: static method of <code>[multicast-ipc](#module_multicast-ipc)</code>  
 **Fulfil**: <code>\*</code> Result of the last item returned from the callback  
@@ -87,7 +92,16 @@ Initialize a socket.  Listens to messages, allows sending messages and automatic
 | callback | <code>apiCallback</code> | Function that will be called with the communication api object |
 
 **Example**  
-```jsvar ipc = require('multicast-ipc');ipc.withSocket(function (api) {  // The API object contains helper methods for implementing your own IPC protocol    return api.broadcast('node:online')            .then(api.unbind);  // This is optional (the library automatically handles resources});```
+```js
+var ipc = require('multicast-ipc');
+
+ipc.withSocket(function (api) {
+  // The API object contains helper methods for implementing your own IPC protocol
+  
+  return api.broadcast('node:online')
+            .then(api.unbind);  // This is optional (the library automatically handles resources
+});
+```
 
 
 <a name="module_comm-api..CommApi"></a>
@@ -117,7 +131,9 @@ API Helper Object has convenience functions for implementing your custom communi
 <a name="module_comm-api..CommApi+broadcast"></a>
 
 ### commApi.broadcast(message) ⇒ <code>promise</code>
-Broadcast a message to all listeners.Listeners will need to connect to the same port and multicastAddress as the sender to receive messages.
+Broadcast a message to all listeners.
+
+Listeners will need to connect to the same port and multicastAddress as the sender to receive messages.
 
 **Kind**: instance method of <code>[CommApi](#module_comm-api..CommApi)</code>  
 **Fulfil**: No value.  The buffer is safe to reuse now.  
@@ -144,7 +160,14 @@ Repeat a set of commands for a specific number of times
 <a name="module_comm-api..CommApi+repeatWhile"></a>
 
 ### commApi.repeatWhile ⇒ <code>Promise</code>
-Repeat a certain chain of commands until the specified condition is met.  This is the equivalent of a while loop.The ```condition``` function is used to decide whether to continue looping or stop.  It receives the last value fromthe action function as input and should return ```true``` to continue the loop or false to ```stop```.The ```action``` function contains the body of the loop.  This is typically an entire back and forth interaction of theprotocol using [broadcast](broadcast), [send](send) and [waitForMessage](waitForMessage) functions.  The end result should be apromise that resolves to a value which will be passed into the ```condition``` function.
+Repeat a certain chain of commands until the specified condition is met.  This is the equivalent of a while loop.
+
+The ```condition``` function is used to decide whether to continue looping or stop.  It receives the last value from
+the action function as input and should return ```true``` to continue the loop or false to ```stop```.
+
+The ```action``` function contains the body of the loop.  This is typically an entire back and forth interaction of the
+protocol using [broadcast](broadcast), [send](send) and [waitForMessage](waitForMessage) functions.  The end result should be a
+promise that resolves to a value which will be passed into the ```condition``` function.
 
 **Kind**: instance property of <code>[CommApi](#module_comm-api..CommApi)</code>  
 **Fulfil**: <code>\*</code> The latest lastValue  
@@ -159,7 +182,13 @@ Repeat a certain chain of commands until the specified condition is met.  This i
 <a name="module_comm-api..CommApi+send"></a>
 
 ### commApi.send(message, port, ipAddress) ⇒ <code>Promise</code>
-Send a message directly to a port/ip address.This function can be used for 1:1 communication as well as for group messaging if the IP address happens to beone that is in the multicast range.If the value of address is a host name, DNS will be used to resolve the address of the host which will incur at leastone processTick delay. If the address is an empty string, '127.0.0.1' or '::1' will be used instead.
+Send a message directly to a port/ip address.
+
+This function can be used for 1:1 communication as well as for group messaging if the IP address happens to be
+one that is in the multicast range.
+
+If the value of address is a host name, DNS will be used to resolve the address of the host which will incur at least
+one processTick delay. If the address is an empty string, '127.0.0.1' or '::1' will be used instead.
 
 **Kind**: instance method of <code>[CommApi](#module_comm-api..CommApi)</code>  
 **Fulfil**: No value  
@@ -182,7 +211,8 @@ Unbind socket.  No more communication can be done through this promise chain aft
 <a name="module_comm-api..CommApi+waitForMessage"></a>
 
 ### commApi.waitForMessage([filter]) ⇒ <code>Promise</code>
-Wait for a specific message.  The optional filter function is called for every message that is received.  If the filterfunction returns true, the promise is resolved with that value.
+Wait for a specific message.  The optional filter function is called for every message that is received.  If the filter
+function returns true, the promise is resolved with that value.
 
 **Kind**: instance method of <code>[CommApi](#module_comm-api..CommApi)</code>  
 **Fulfil**: <code>\*</code> message - The message that was received  

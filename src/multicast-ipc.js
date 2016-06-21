@@ -23,12 +23,11 @@ function getSocket(port, multicastAddress) {
         try {
             var socket = dgram.createSocket({type: 'udp4', reuseAddr: true});
 
-            socket._port = port;
-
             socket.once('listening', function () {
                 socket._multicastAddress = multicastAddress || '224.0.2.1';
-
+                socket._port = port;
                 socket.setBroadcast(true);
+
                 socket.setMulticastLoopback(true);
                 socket.setMulticastTTL(1);
                 socket.addMembership(socket._multicastAddress);
