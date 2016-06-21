@@ -3,7 +3,7 @@ var dgram = require('dgram');
 var CommApi = require('./comm-api');
 
 /**
- * @module multicast-ipc
+ * @class multicastIpc
  */
 
 /**
@@ -35,7 +35,7 @@ function getSocket(port, multicastAddress) {
                 resolve(socket);
             });
 
-            socket.bind(socket._port);
+            socket.bind(port);
         } catch (ex) {
             reject(ex);
         }
@@ -49,11 +49,11 @@ function getSocket(port, multicastAddress) {
 /**
  * Initialize a socket.  Listens to messages, allows sending messages and automatically cleans up after itself.
  *
- * The callback function will be invoked after the socket is successfully set up.  An `api` object will be passed
+ * The callback function will be invoked after the socket is successfully set up.  An {@link #CommApi api} object will be passed
  * to the callback which has utility functions that help in creating the application-layer communication protocol.
  *
- * @param {number} [port] - Datagram port to listen on (Default: 61088)
- * @param {string} [multicastAddress] - Multicast address to group senders/listeners
+ * @param {number} [port=61088] - Datagram port to listen on
+ * @param {string} [multicastAddress=224.0.2.1] - Multicast address to group senders/listeners
  * @param {apiCallback} callback - Function that will be called with the communication api object
  *
  * @fulfil {*} Result of the last item returned from the callback
@@ -72,12 +72,19 @@ function getSocket(port, multicastAddress) {
  *             .then(api.unbind);  // This is optional (the library automatically handles resources
  * });
  * ```
+ *
+ * @memberof! multicastIpc
+ * @static
+ * @alias multicastIpc.withSocket
+ *
+ * @since 1.0.0
  */
 exports.withSocket = function bind(port, multicastAddress, callback) {
     var p = typeof port === 'number' ? port : 61088;
+    var addr = typeof multicastAddress === 'string' ? multicastAddress : undefined;
     var cb = typeof port === 'function' ? port : callback;
 
-    return promise.using(getSocket(p, multicastAddress), function (socket) {
+    return promise.using(getSocket(p, addr), function (socket) {
         return promise.try(cb, new CommApi(socket));
     });
 };
@@ -88,5 +95,8 @@ exports.withSocket = function bind(port, multicastAddress, callback) {
  * @callback apiCallback
  *
  * @param {CommApi} api - API Helper Object
+ *
+ * @memberof! multicastIpc
+ * @since 1.0.0
  */
 

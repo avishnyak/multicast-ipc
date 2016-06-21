@@ -1,10 +1,6 @@
 var promise = require('bluebird');
 
 /**
- * @module comm-api
- */
-
-/**
  * API Helper Object has convenience functions for implementing your custom communications protocol.
  * @class CommApi
  * @param socket
@@ -25,11 +21,32 @@ module.exports = function CommApi(socket) {
  * @reject {Error} err - Error returned from socket
  *
  * @returns {promise}
+ *
+ * @since 1.0.0
+ *
+ * @example
+ * ```js
+ * var ipc = require('multicast-ipc');
+ *
+ * // Announcer BOT will tell everyone when someone joins the room!
+ * ipc.withSocket(function (api) {
+ *   function isJoinMessage(message, rinfo) {
+ *       return message.toString().substr(0, 5) == 'join:';
+ *   }
+ *
+ *   return api.waitForMessage(isJoinMessage)
+ *             .map(function (req) {
+ *                 // Send a message to all listeners
+ *                 
+ *                 return api.broadcast('Player ' + req.message.toString().substr(5) + ' has entered the arena!');
+ *             };
+ * });
+ * ```
  */
 CommApi.prototype.broadcast = function (message) {
     var socket = this._socket;
 
-    return send.bind(this, message, socket._port, socket._multicastAddress)();
+    return send.bind(this, message, socket.address().port, socket.address().address)();
 };
 
 /**
@@ -49,6 +66,28 @@ CommApi.prototype.broadcast = function (message) {
  * @reject {Error} err - Error from sending the command
  *
  * @returns {Promise}
+ *
+ * @since 1.0.0
+ *
+ * ```js
+ * var ipc = require('multicast-ipc');
+ *
+ * // Welcome BOT will welcome new players
+ * ipc.withSocket(function (api) {
+ *   // Send a message to all listeners
+ *
+ *   function isJoinMessage(message, rinfo) {
+ *       return message.toString().substr(0, 5) == 'join:';
+ *   }
+ *
+ *   return api.waitForMessage(isJoinMessage)
+ *             .map(function (req) {
+ *                 // Send a direct message as a 'reply' back to the process that sent the original message
+ *
+ *                 return api.send('Welcome ' + req.message.toString().substr(5) + '!', req.port, req.address);
+ *             };
+ * });
+ * ```
  */
 CommApi.prototype.send = function send(message, port, ipAddress) {
     var socket = this._socket;
@@ -66,6 +105,8 @@ CommApi.prototype.send = function send(message, port, ipAddress) {
  * @reject {Error} err - Socket could not be closed
  *
  * @returns {Promise}
+ *
+ * @since 1.0.0
  */
 CommApi.prototype.unbind = function unbind() {
     var socket = this._socket;
@@ -81,10 +122,28 @@ CommApi.prototype.unbind = function unbind() {
  *
  * @param {function} [filter] - Each received message is passed into the filter function.
  *
- * @fulfil {*} message - The message that was received
+ * @fulfil {{ address: string, family: string, port: number, message: Buffer }} message - The message that was received
  * @reject {Error} err - Error thrown from the filter function
  *
  * @returns {Promise}
+ *
+ * @since 1.0.0
+ *
+ * ```js
+ * var ipc = require('multicast-ipc');
+ *
+ * // Logger BOT will log incoming messages
+ * ipc.withSocket(function (api) {
+ *   function isJoinMessage(message, rinfo) {
+ *       return message.toString().substr(0, 5) == 'join:';
+ *   }
+ *
+ *   return api.waitForMessage(isJoinMessage)
+ *             .map(function (req) {
+ *                 console.log('Audit Log: %s:%d - %s', req.address, req.port, req.message.toString());
+ *             };
+ * });
+ * ```
  */
 CommApi.prototype.waitForMessage = function waitForMessage(filter) {
     var socket = this._socket;
@@ -101,7 +160,9 @@ CommApi.prototype.waitForMessage = function waitForMessage(filter) {
 
             function processMessage(message, rinfo) {
                 if (typeof filter !== 'function' || filter(message, rinfo) === true) {
-                    resolve(message);
+                    rinfo.message = message;
+
+                    resolve(rinfo);
                 } else {
                     resolve(undefined);
                 }
@@ -123,7 +184,8 @@ var repeatWhile = promise.method(function(condition, action, lastValue) {
  * the action function as input and should return ```true``` to continue the loop or false to ```stop```.
  *
  * The ```action``` function contains the body of the loop.  This is typically an entire back and forth interaction of the
- * protocol using {@link broadcast}, {@link send} and {@link waitForMessage} functions.  The end result should be a
+ * protocol using {@link #CommApi+broadcast broadcast}, {@link #CommApi+send send} and
+ * {@link #CommApi+waitForMessage waitForMessage} functions.  The end result should be a
  * promise that resolves to a value which will be passed into the ```condition``` function.
  *
  * @param {function} condition - A callback function that receives the "lastValue" and returns true to continue repeating
@@ -134,6 +196,8 @@ var repeatWhile = promise.method(function(condition, action, lastValue) {
  * @reject {Error} err - Error thrown by either the condition function or the action function
  *
  * @returns {Promise}
+ *
+ * @since 1.0.0
  */
 CommApi.prototype.repeatWhile = repeatWhile;
 
@@ -147,6 +211,8 @@ CommApi.prototype.repeatWhile = repeatWhile;
  * @reject {Error} err - Error thrown from the ```fn``` function
  *
  * @returns {Promise}
+ *
+ * @since 1.0.0
  */
 CommApi.prototype.repeatFor = function repeatFor(count, fn) {
     return repeatWhile(function (lastValue) { return lastValue > 0; }, function (lastValue) {
