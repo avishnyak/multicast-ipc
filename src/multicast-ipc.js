@@ -11,7 +11,7 @@ var CommApi = require('./comm-api');
  *
  * @private
  * @param {number} port - Port to listen/send
- * @param {string} [multicastAddress] - A multicast address for the socket (Default: 224.0.2.1)
+ * @param {string} multicastAddress - A multicast address for the socket (Default: 224.0.2.1)
  *
  * @fulfil {socket}
  * @reject {Error}
@@ -24,7 +24,7 @@ function getSocket(port, multicastAddress) {
             var socket = dgram.createSocket({type: 'udp4', reuseAddr: true});
 
             socket.once('listening', function () {
-                socket._multicastAddress = multicastAddress || '224.0.2.1';
+                socket._multicastAddress = multicastAddress;
                 socket._port = port;
                 socket.setBroadcast(true);
 
@@ -81,11 +81,11 @@ function getSocket(port, multicastAddress) {
  */
 exports.withSocket = function bind(port, multicastAddress, callback) {
     var p = typeof port === 'number' ? port : 61088;
-    var addr = typeof multicastAddress === 'string' ? multicastAddress : undefined;
+    var addr = typeof multicastAddress === 'string' ? multicastAddress : '224.0.2.1';
     var cb = typeof port === 'function' ? port : callback;
 
     return promise.using(getSocket(p, addr), function (socket) {
-        return promise.try(cb, new CommApi(socket));
+        return promise.try(cb, new CommApi(socket, port, multicastAddress));
     });
 };
 

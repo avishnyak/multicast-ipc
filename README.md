@@ -54,7 +54,7 @@ npm install multicast-ipc
     
 * [CommApi](#CommApi)
     * [new CommApi(socket)](#new_CommApi_new)
-    * [.broadcast(message)](#CommApi+broadcast) ⇒ <code>promise</code>
+    * [.broadcast(message)](#CommApi+broadcast) ⇒ <code>Promise</code>
     * [.repeatFor(count, fn)](#CommApi+repeatFor) ⇒ <code>Promise</code>
     * [.repeatWhile](#CommApi+repeatWhile) ⇒ <code>Promise</code>
     * [.send(message, port, ipAddress)](#CommApi+send) ⇒ <code>Promise</code>
@@ -99,7 +99,7 @@ API Helper Object has convenience functions for implementing your custom communi
 
 <a name="CommApi+broadcast"></a>
 
-### *commApi*.broadcast(message) ⇒ <code>promise</code>
+### *commApi*.broadcast(message) ⇒ <code>Promise</code>
 Broadcast a message to all listeners.Listeners will need to connect to the same port and multicastAddress as the sender to receive messages.
 
 **Fulfil**: No value.  The buffer is safe to reuse now.  

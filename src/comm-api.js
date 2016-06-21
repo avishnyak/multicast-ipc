@@ -5,9 +5,13 @@ var promise = require('bluebird');
  * @class CommApi
  * @param socket
  */
-module.exports = function CommApi(socket) {
+module.exports = CommApi;
+
+function CommApi(socket, port, multicastAddress) {
     this._socket = socket;
-};
+    this._port = port;
+    this._multicastAddress = multicastAddress;
+}
 
 
 /**
@@ -20,7 +24,7 @@ module.exports = function CommApi(socket) {
  * @fulfil No value.  The buffer is safe to reuse now.
  * @reject {Error} err - Error returned from socket
  *
- * @returns {promise}
+ * @returns {Promise}
  *
  * @since 1.0.0
  *
@@ -44,9 +48,7 @@ module.exports = function CommApi(socket) {
  * ```
  */
 CommApi.prototype.broadcast = function (message) {
-    var socket = this._socket;
-
-    return send.bind(this, message, socket.address().port, socket.address().address)();
+    return this.send(message, this._port, this._multicastAddress);
 };
 
 /**
